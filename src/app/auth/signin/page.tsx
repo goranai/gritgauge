@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { Github } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -9,6 +8,7 @@ function SignInContent() {
   const params = useSearchParams();
   const error = params?.get("error");
   const callbackUrl = params?.get("callbackUrl") || "/dashboard";
+  const signInUrl = `/api/auth/signin/github?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-950 px-4">
@@ -28,13 +28,13 @@ function SignInContent() {
             </div>
           )}
 
-          <button
-            onClick={() => signIn("github", { callbackUrl })}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
+          <a
+            href={signInUrl}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors no-underline"
           >
             <Github className="w-5 h-5" />
             Continue with GitHub
-          </button>
+          </a>
 
           <p className="text-surface-500 text-xs mt-6">
             Only public repository access is requested. We never access private repos without explicit permission.
