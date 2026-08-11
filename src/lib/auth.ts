@@ -30,12 +30,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async signIn({ user, account, profile }) {
-      console.error("[AUTH DEBUG] signIn called", { 
-        userId: user?.id, 
-        provider: account?.provider,
-        hasAccessToken: !!account?.access_token,
-        profileLogin: (profile as any)?.login,
-      });
       if (account?.provider === "github" && account.access_token) {
         try {
           const login = (profile as Record<string, string>)?.login || (user as any)?.login;
@@ -51,9 +45,7 @@ export const authOptions: NextAuthOptions = {
               githubToken: account.access_token,
             },
           });
-          console.error("[AUTH DEBUG] upsert succeeded");
-        } catch (e: any) {
-          console.error("[AUTH DEBUG] upsert failed", e.message);
+        } catch {
           // Don't fail the signin — the account was already created by the adapter
         }
       }
@@ -69,16 +61,4 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-  logger: {
-    error(code, ...message) {
-      console.error("[AUTH ERROR]", code, ...message);
-    },
-    warn(code, ...message) {
-      console.warn("[AUTH WARN]", code, ...message);
-    },
-    debug(code, ...message) {
-      console.log("[AUTH DEBUG]", code, ...message);
-    },
-  },
-  debug: true,
 };
