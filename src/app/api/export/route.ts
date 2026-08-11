@@ -59,10 +59,11 @@ export async function POST(request: NextRequest) {
           repoId: repoId || null,
           title,
           type,
-        format,
-        data: reportData,
-      },
-    });
+          format,
+          data: reportData,
+        },
+      });
+    } catch { /* repo may not be saved */ }
 
     // For Markdown
     if (format === "markdown") {
