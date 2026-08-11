@@ -46,7 +46,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-surface-400">
               <li>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/goranai/gritgauge"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors flex items-center gap-1.5"

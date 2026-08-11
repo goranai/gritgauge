@@ -123,7 +123,7 @@ export default function HomePage() {
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/goranai/gritgauge"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary text-lg px-8 py-4 flex items-center gap-2"

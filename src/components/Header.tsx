@@ -30,7 +30,7 @@ export default function Header() {
               Dashboard
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/goranai/gritgauge"
               target="_blank"
               rel="noopener noreferrer"
               className="text-surface-300 hover:text-white transition-colors flex items-center gap-1.5"
@@ -63,7 +63,7 @@ export default function Header() {
               Dashboard
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/goranai/gritgauge"
               target="_blank"
               rel="noopener noreferrer"
               className="text-surface-300 hover:text-white py-2"
@@ -83,3 +83,4 @@ export default function Header() {
     </header>
   );
 }
+
