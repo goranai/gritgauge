@@ -1,44 +1,49 @@
 # GritGauge
 
-**Tools for open-source maintainers — issue triage, PR review, security scanning, project health tracking.**
+**AI-powered co-pilot for open-source maintainers — automate issue triage, PR review, security scanning, duplicate detection, release notes, and project insights.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/goranai/gritgauge/blob/main/LICENSE)
 [![Stars](https://img.shields.io/github/stars/goranai/gritgauge?style=social)](https://github.com/goranai/gritgauge/stargazers)
+[![CI](https://github.com/goranai/gritgauge/actions/workflows/ci.yml/badge.svg)](https://github.com/goranai/gritgauge/actions/workflows/ci.yml)
 **Live: [gritgauge.vercel.app](https://gritgauge.vercel.app)**
 
 ---
 
 ## What it does
 
-GritGauge handles repetitive maintenance work — triaging issues, reviewing PRs, tracking project health, generating changelogs. The goal is simple: spend less time on overhead, more time writing code.
+GritGauge eliminates the tedious parts of open-source maintenance. Enter any public GitHub repo and get instant AI-powered analysis across 7 modules — all backed by real-time GitHub data.
 
-### Why
-
-Most open-source maintainers deal with the same problems:
-- Issues pile up — no labels, no priority, nobody assigned
-- PRs sit unreviewed for weeks
-- No clear picture of project health — bus factor, response times, contributor activity
-- Writing changelogs manually for every release
-
-### How it helps
-
-- Triage issues automatically — labels, priority, duplicate detection, sentiment check
-- Review PRs with risk assessment, change summaries, and security flags
-- Dashboard showing bus factor, stale issue ratio, response times, contributor trends
-- Changelogs generated from merged PRs
-
----
-
-## Features
+### 7 AI-Powered Modules
 
 | Module | What it does |
 |--------|-------------|
-| AI Issue Triage | Auto-label, prioritize, detect duplicates, analyze sentiment |
-| PR Review Assistant | Risk assessment, change summaries, flags security concerns |
-| Health Dashboard | Bus factor, response time, stale ratio, contributor trends |
-| Changelog Generator | Categorized changelogs from merged PRs |
-| Security Spotlight | Flag risky file changes and dependency vulnerabilities |
-| Community Insights | Contributor stats, first-time contributor tracking |
+| **Triage** | AI analyzes every open issue — assigns priority (critical/high/medium/low), estimates effort, suggests labels, detects sentiment |
+| **Review** | AI reviews each PR — risk level assessment, key changes summary, merge recommendation (approve/comment/request changes) |
+| **Dedup** | AI scans all issues and detects exact duplicates and similar reports with explanations |
+| **Security** | Full security audit — risk score, vulnerability detection, dependency analysis, prioritized remediation steps |
+| **Release Notes** | AI generates professional release notes from merged PRs — highlights, features, bug fixes, breaking changes, contributors |
+| **Changelog** | AI-powered changelog generation grouped by category (features, fixes, docs, maintenance) |
+| **Insights** | AI benchmarks repo against industry standards, forecasts 6-month trends, provides 5 actionable recommendations |
+
+### Dashboard
+
+- Live GitHub data for any public repo (stars, forks, issues, PRs, contributors)
+- Compare repositories side-by-side with radar charts
+- Health metrics: bus factor, stale issue ratio, response time, contributor trends
+- Settings: theme, notifications, automation preferences
+
+### Also Included
+
+| Component | Description |
+|-----------|-------------|
+| **REST API** | 16 endpoints for triage, review, dedup, security, insights, release notes, export, webhooks, etc. |
+| **TypeScript SDK** | Full typed SDK for integrating GritGauge into Node.js apps |
+| **Python SDK** | Python client for the GritGauge API |
+| **Go SDK** | Go client for the GritGauge API |
+| **CLI Tool** | Command-line interface with 5 commands: triage, review, health, changelog, compare |
+| **VS Code Extension** | Sidebar integration with tree views and 8 commands |
+| **Chrome Extension** | Health badges and inline triage on GitHub |
+| **i18n** | 10 languages supported |
 
 ---
 
@@ -49,51 +54,43 @@ Most open-source maintainers deal with the same problems:
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
-| GitHub API | Octokit |
-| AI Engine | OpenAI API (GPT-4o-mini) |
-| Charts | Recharts |
+| AI Engine | OpenAI / DeepSeek (GPT-4o-mini / deepseek-chat) |
+| GitHub Data | Octokit (REST API) + GraphQL |
+| Authentication | NextAuth.js (GitHub OAuth + JWT) |
 | Database | PostgreSQL (Prisma ORM) |
+| Charts | Recharts |
 | Deployment | Vercel, Docker |
 
 ---
 
-## Running locally
+## API Reference
 
-You need Node.js 18+, a GitHub token, and an OpenAI API key.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/github?repo=owner/repo` | Fetch repo info, issues, PRs, contributors |
+| POST | `/api/triage` | AI issue triage — priority, labels, effort |
+| POST | `/api/review` | AI PR review — risk, key changes |
+| POST | `/api/dedup` | AI duplicate detection across issues |
+| POST | `/api/security` | AI security audit — vulnerabilities, risks |
+| POST | `/api/release-notes` | AI release notes from PRs |
+| POST | `/api/insights` | AI benchmarks, predictions, recommendations |
+| POST | `/api/export` | Export reports (CSV, JSON, Markdown) |
+| GET | `/api/health` | System health check |
 
-Copy the env file and fill in your keys:
-```
+---
+
+## Running Locally
+
+Requirements: Node.js 18+, GitHub OAuth app, and an AI API key (OpenAI or DeepSeek).
+
+```bash
 cp .env.example .env.local
-```
-
-Then:
-```
+# Fill in: GITHUB_ID, GITHUB_SECRET, NEXTAUTH_SECRET, OPENAI_API_KEY (or DEEPSEEK_API_KEY), DATABASE_URL
 npm install
 npm run dev
 ```
 
 Open `http://localhost:3000`.
-
----
-
-## API
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/github?repo=owner/repo` | Fetch repo info, issues, PRs, contributors |
-| POST | `/api/triage` | AI-powered issue triage |
-| POST | `/api/review` | AI-powered PR review |
-| GET | `/api/analytics?repoId=id` | Project health metrics |
-| POST | `/api/security` | Security vulnerability scan |
-| GET | `/api/compare?repoId=a&repoId=b` | Compare repositories |
-| POST | `/api/export` | Export reports (CSV, JSON, Markdown, PDF) |
-
-Example — triage an issue:
-```
-curl -X POST http://localhost:3000/api/triage \
-  -H "Content-Type: application/json" \
-  -d '{"title": "App crashes on dark mode toggle", "issueBody": "When switching to dark mode, the app crashes...", "existingLabels": ["bug"]}'
-```
 
 ---
 
@@ -104,7 +101,3 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## License
 
 MIT — see [LICENSE](./LICENSE).
-
----
-
-*This project uses AI (OpenAI GPT-4o-mini) for issue triage, PR review, and security scanning features. API credits are required to use those features.*

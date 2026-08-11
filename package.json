@@ -1,7 +1,7 @@
 {
   "name": "gritgauge",
   "version": "2.0.0",
-  "description": "AI-powered co-pilot for open-source maintainers — automate issue triage, PR reviews, security scanning, release notes, and project health tracking with full dashboard, CLI, and API.",
+  "description": "AI-powered co-pilot for open-source maintainers — 7 AI modules: issue triage, PR review, duplicate detection, security audit, release notes, changelog, and project insights. Includes REST API, TypeScript/Python/Go SDKs, CLI, VS Code & Chrome extensions.",
   "private": true,
   "scripts": {
     "dev": "next dev",
