@@ -57,13 +57,17 @@ export default function DashboardPage() {
         throw new Error(data.error || "Failed to fetch repo data");
       }
 
-      setRepo(data.repo);
-      setIssues(data.issues);
-      setPRs(data.pullRequests);
-      setContributors(data.contributors);
+      setRepo(data.repo || null);
+      setIssues(data.issues || []);
+      setPRs(data.pullRequests || []);
+      setContributors(data.contributors || []);
+      if (!data.repo) {
+        setError("No repository data returned. Is the repo public?");
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
+      console.error("Dashboard fetch error:", err);
     } finally {
       setLoading(false);
     }
