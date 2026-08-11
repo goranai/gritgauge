@@ -256,3 +256,38 @@ export async function generatePRDescription(
     return `## PR Description\n\nGeneration error: ${err?.message || "unknown"}`;
   }
 }
+
+export async function generateInsights(
+  repoName: string, stars: number, forks: number, openIssues: number, openPRs: number,
+  contributorCount: number, language: string, issues: { title: string; number: number; labels: string[] }[],
+  prs: { title: string; number: number }[]
+): Promise<{ benchmarks: string; predictions: string; recommendations: string[]; summary: string }> {
+  const ai = getAI();
+  if (!ai) return { benchmarks: "No AI key.", predictions: "", recommendations: [], summary: "" };
+
+  const prompt = `Analyze this GitHub repo "${repoName}" (${language}, ${stars} stars, ${forks} forks, ${openIssues} issues, ${openPRs} PRs, ${contributorCount} contributors).
+  
+Recent issues: ${issues.slice(0,5).map(i => `#${i.number}: ${i.title}`).join("; ")}
+Recent PRs: ${prs.slice(0,5).map(p => `#${p.number}: ${p.title}`).join("; ")}
+
+Return ONLY JSON with these fields:
+- benchmarks: string (how this repo compares to industry standards for ${language} projects of similar size. Include specific metrics comparison)
+- predictions: string (forecast: where will this repo be in 6 months? Issue/PR trends, contributor growth)
+- recommendations: string[] (5 specific, actionable recommendations to improve project health, contributor experience, and code quality)
+- summary: string (one-line overall assessment)
+
+Return: {"benchmarks":"...","predictions":"...","recommendations":["...","..."],"summary":"..."}`;
+
+  try {
+    const c = await ai.client.chat.completions.create({ model: ai.model, temperature: 0.4, max_tokens: 1500, messages: [{ role: "user", content: prompt }] });
+    const raw = c.choices[0]?.message?.content || "{}";
+    const s = raw.indexOf("{"); const e = raw.lastIndexOf("}");
+    if (s >= 0 && e > s) {
+      const r = JSON.parse(raw.substring(s, e + 1));
+      return { benchmarks: r.benchmarks || "", predictions: r.predictions || "", recommendations: r.recommendations || [], summary: r.summary || "" };
+    }
+    return { benchmarks: raw, predictions: "", recommendations: [], summary: "" };
+  } catch {
+    return { benchmarks: "Analysis unavailable.", predictions: "", recommendations: [], summary: "" };
+  }
+}

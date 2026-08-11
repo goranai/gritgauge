@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Shield, FileText, GitPullRequest, AlertCircle, Loader2, X, Copy, Tag } from "lucide-react";
+import { Sparkles, Shield, FileText, GitPullRequest, AlertCircle, Loader2, X, Copy, Tag, TrendingUp } from "lucide-react";
 import type { Issue, PullRequest } from "@/types";
 
 interface TriageResult { priority: string; effort: string; estimatedEffort?: string; suggestedLabels: string[]; summary: string; sentiment: string; }
 interface ReviewResult { summary: string; riskLevel: string; suggestedReviewers: string[]; keyChanges: string[]; potentialIssues: string[]; recommendation: string; }
 interface ScanData { riskScore?: number; vulnerabilities?: any[]; dependencyIssues?: any[]; codeIssues?: any[]; summary?: string; scannedAt?: string; }
 interface DedupResult { pairs: { issueA: number; issueB: number; similarity: string; reason: string }[]; summary: string; }
+interface InsightsData { benchmarks: string; predictions: string; recommendations: string[]; summary: string; }
 
 interface Props { repoFullName: string; issues: Issue[]; prs: PullRequest[]; }
 
@@ -18,6 +19,7 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
   const [changelog, setChangelog] = useState<string | null>(null);
   const [dedupData, setDedupData] = useState<DedupResult | null>(null);
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
+  const [insightsData, setInsightsData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState("");
   const [activeAction, setActiveAction] = useState("");
 
@@ -92,6 +94,17 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
     setLoading("");
   }, [prs, repoFullName, releaseNotes, activeAction]);
 
+  const runInsights = useCallback(async () => {
+    if (insightsData) { setActiveAction(activeAction === "insights" ? "" : "insights"); return; }
+    setLoading("insights"); setActiveAction("insights");
+    try {
+      const res = await fetch("/api/insights", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoName: repoFullName, stars: 0, forks: 0, openIssues: issues.length, openPRs: prs.length, contributorCount: 0, language: "", issues: issues.slice(0, 5).map(i => ({ title: i.title, number: i.number, labels: i.labels || [] })), prs: prs.slice(0, 5).map(p => ({ title: p.title, number: p.number })) }) });
+      const d = await res.json();
+      if (d.success) setInsightsData(d.data);
+    } catch {}
+    setLoading("");
+  }, [issues, prs, repoFullName, insightsData, activeAction]);
+
   const badge = (v: string) => { const c = v?.toLowerCase() || ""; if (c.includes("critical") || c.includes("high")) return "text-red-400 bg-red-500/10"; if (c.includes("medium")) return "text-yellow-400 bg-yellow-500/10"; return "text-green-400 bg-green-500/10"; };
 
   return (
@@ -111,6 +124,8 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
             <Tag className="w-5 h-5 text-purple-400 mb-1" /><div className="text-white text-xs font-medium">Release</div><div className="text-surface-500 text-[10px]">{loading === "release" ? "..." : releaseNotes ? "Done" : `${prs.length}`}</div></button>
           <button onClick={runChangelog} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-green-500 text-left transition-all disabled:opacity-50">
             <FileText className="w-5 h-5 text-green-400 mb-1" /><div className="text-white text-xs font-medium">Changelog</div><div className="text-surface-500 text-[10px]">{loading === "changelog" ? "..." : changelog ? "Done" : "Gen"}</div></button>
+          <button onClick={runInsights} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-cyan-500 text-left transition-all disabled:opacity-50">
+            <TrendingUp className="w-5 h-5 text-cyan-400 mb-1" /><div className="text-white text-xs font-medium">Insights</div><div className="text-surface-500 text-[10px]">{loading === "insights" ? "..." : insightsData ? "Done" : "Analyze"}</div></button>
         </div>
       </div>
 
@@ -196,7 +211,24 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
         </div>
       )}
 
-      {loading && <div className="flex items-center justify-center gap-2 text-surface-400 py-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">{loading === "triage" ? "Analyzing issues..." : loading === "review" ? "Reviewing PRs..." : loading === "dedup" ? "Finding duplicates..." : loading === "scan" ? "Running security audit..." : loading === "release" ? "Generating release notes..." : "Generating changelog..."}</span></div>}
+      {/* Insights */}
+      {activeAction === "insights" && insightsData && (
+        <div className="card border-cyan-500/20">
+          <div className="flex items-center justify-between mb-4"><h4 className="text-white font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-cyan-400" />AI Insights</h4><button onClick={() => setActiveAction("")} className="text-surface-400 hover:text-white"><X className="w-4 h-4" /></button></div>
+          {insightsData.summary && <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 mb-4"><p className="text-sm text-cyan-300 font-medium">{insightsData.summary}</p></div>}
+          <div className="space-y-4">
+            <div className="bg-surface-800/50 rounded-lg p-4"><h5 className="text-sm font-semibold text-white mb-2">Industry Benchmarks</h5><p className="text-sm text-surface-300 leading-relaxed">{insightsData.benchmarks}</p></div>
+            <div className="bg-surface-800/50 rounded-lg p-4"><h5 className="text-sm font-semibold text-white mb-2">6-Month Forecast</h5><p className="text-sm text-surface-300 leading-relaxed">{insightsData.predictions}</p></div>
+            {(insightsData.recommendations || []).length > 0 && (
+              <div className="bg-surface-800/50 rounded-lg p-4"><h5 className="text-sm font-semibold text-white mb-3">Recommendations</h5>
+                <div className="space-y-2">{insightsData.recommendations.map((r, i) => (<div key={i} className="flex items-start gap-2"><span className="text-cyan-400 font-bold text-sm">{i + 1}.</span><span className="text-sm text-surface-300">{r}</span></div>))}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {loading && <div className="flex items-center justify-center gap-2 text-surface-400 py-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">{loading === "triage" ? "Analyzing issues..." : loading === "review" ? "Reviewing PRs..." : loading === "dedup" ? "Finding duplicates..." : loading === "scan" ? "Running security audit..." : loading === "release" ? "Generating release notes..." : loading === "insights" ? "Analyzing benchmarks & trends..." : "Generating changelog..."}</span></div>}
     </div>
   );
 }
