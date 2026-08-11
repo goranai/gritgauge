@@ -4,6 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/goranai/gritgauge/blob/main/LICENSE)
 [![Stars](https://img.shields.io/github/stars/goranai/gritgauge?style=social)](https://github.com/goranai/gritgauge/stargazers)
+**Live: [gritgauge.vercel.app](https://gritgauge.vercel.app)**
 
 ---
 
