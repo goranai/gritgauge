@@ -27,14 +27,20 @@ Return ONLY the JSON object, nothing else.`;
     if (!client) {
       return { issueNumber: 0, suggestedLabels: ["no-key"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "OpenAI key not configured.", isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
     }
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-      max_tokens: 500,
-    });
+    
+    let raw = "";
+    try {
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 500,
+      });
+      raw = completion.choices[0]?.message?.content || "";
+    } catch (apiErr: any) {
+      return { issueNumber: 0, suggestedLabels: ["api-error"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "OpenAI API error: " + (apiErr?.message || "unknown"), isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
+    }
 
-    const raw = completion.choices[0]?.message?.content || "";
     // Parse whatever JSON we can find
     const s = raw.indexOf("{");
     const e = raw.lastIndexOf("}");
@@ -49,7 +55,7 @@ Return ONLY the JSON object, nothing else.`;
       priority: parsed.priority || "medium",
       estimatedEffort: parsed.estimatedEffort || "medium", 
       suggestedAssignee: parsed.suggestedAssignee || null,
-      summary: parsed.summary || raw.substring(0, 200),
+      summary: parsed.summary || raw.substring(0, 200) || "AI returned empty response",
       isDuplicate: parsed.isDuplicate || false,
       duplicateOf: null,
       sentiment: parsed.sentiment || "neutral",
