@@ -51,9 +51,13 @@ Only return valid JSON, no other text.`;
     });
 
     const content = completion.choices[0]?.message?.content || "{}";
-    // Extract JSON from potential markdown code block
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const result = JSON.parse(jsonMatch ? jsonMatch[0] : content) as Partial<TriageResult>;
+    // Extract JSON — handle code blocks, markdown, and bare JSON
+    let jsonStr = content;
+    const codeBlock = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock) jsonStr = codeBlock[1].trim();
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON found in AI response");
+    const result = JSON.parse(jsonMatch[0]) as Partial<TriageResult>;
 
     return {
       issueNumber: 0, // filled by caller
@@ -130,8 +134,12 @@ Only return valid JSON, no other text.`;
     });
 
     const content2 = completion2.choices[0]?.message?.content || "{}";
-    const jsonMatch2 = content2.match(/\{[\s\S]*\}/);
-    const result2 = JSON.parse(jsonMatch2 ? jsonMatch2[0] : content2) as Partial<PRReviewResult>;
+    let jsonStr2 = content2;
+    const codeBlock2 = content2.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock2) jsonStr2 = codeBlock2[1].trim();
+    const jsonMatch2 = jsonStr2.match(/\{[\s\S]*\}/);
+    if (!jsonMatch2) throw new Error("No JSON found in AI review response");
+    const result2 = JSON.parse(jsonMatch2[0]) as Partial<PRReviewResult>;
 
     return {
       prNumber: 0,
