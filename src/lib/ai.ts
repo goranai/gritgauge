@@ -196,3 +196,63 @@ Return only the changelog in markdown format.`;
     return `## Changelog\n\nGeneration error: ${err?.message || "unknown"}`;
   }
 }
+
+export async function detectDuplicateIssues(
+  issues: { number: number; title: string; body: string | null }[]
+): Promise<{ pairs: { issueA: number; issueB: number; similarity: string; reason: string }[]; summary: string }> {
+  const ai = getAI();
+  if (!ai || issues.length < 2) return { pairs: [], summary: "Need at least 2 issues to compare." };
+
+  const issueList = issues.map(i => `#${i.number}: ${i.title}\n${(i.body || "").slice(0, 300)}`).join("\n---\n");
+  const prompt = `Compare these GitHub issues and identify duplicates or highly similar pairs. Return ONLY JSON (no markdown):
+  
+${issueList}
+
+Return: {"pairs":[{"issueA":number,"issueB":number,"similarity":"exact-duplicate|very-similar|related","reason":"brief explanation why"}],"summary":"overall findings summary"}`;
+
+  try {
+    const c = await ai.client.chat.completions.create({ model: ai.model, temperature: 0.1, max_tokens: 1500, messages: [{ role: "user", content: prompt }] });
+    const raw = c.choices[0]?.message?.content || "{}";
+    const s = raw.indexOf("{"); const e = raw.lastIndexOf("}");
+    if (s >= 0 && e > s) {
+      const r = JSON.parse(raw.substring(s, e + 1));
+      return { pairs: r.pairs || [], summary: r.summary || "Analysis complete." };
+    }
+    return { pairs: [], summary: raw.substring(0, 200) };
+  } catch (err: any) {
+    return { pairs: [], summary: "Deduplication failed: " + (err?.message || "unknown") };
+  }
+}
+
+export async function generateReleaseNotes(
+  repoName: string, version: string, mergedPRs: { title: string; number: number; author: string; labels: string[] }[]
+): Promise<string> {
+  const ai = getAI();
+  if (!ai) return "Release notes generation requires an AI API key.";
+
+  const prList = mergedPRs.map(p => `- #${p.number}: ${p.title} (@${p.author}) [${p.labels.join(", ")}]`).join("\n");
+  const prompt = `Generate professional release notes for ${repoName} v${version}. PRs:\n${prList}\n\nFormat as markdown with sections: Highlights, New Features, Bug Fixes, Improvements, Breaking Changes, Contributors. Return ONLY the release notes markdown.`;
+
+  try {
+    const c = await ai.client.chat.completions.create({ model: ai.model, temperature: 0.4, max_tokens: 2000, messages: [{ role: "user", content: prompt }] });
+    return c.choices[0]?.message?.content || "Unable to generate release notes.";
+  } catch (err: any) {
+    return `## Release Notes\n\nGeneration error: ${err?.message || "unknown"}`;
+  }
+}
+
+export async function generatePRDescription(
+  diff: string, context: string
+): Promise<string> {
+  const ai = getAI();
+  if (!ai) return "PR description generation requires an AI API key.";
+
+  const prompt = `Generate a clear, structured PR description from this diff. Context: ${context}\n\nDiff:\n\`\`\`\n${diff.slice(0, 8000)}\n\`\`\`\n\nInclude: What changed, Why, How to test, Screenshots (if applicable), Breaking changes (if any). Return markdown.`;
+
+  try {
+    const c = await ai.client.chat.completions.create({ model: ai.model, temperature: 0.3, max_tokens: 1000, messages: [{ role: "user", content: prompt }] });
+    return c.choices[0]?.message?.content || "Unable to generate PR description.";
+  } catch (err: any) {
+    return `## PR Description\n\nGeneration error: ${err?.message || "unknown"}`;
+  }
+}

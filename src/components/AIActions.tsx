@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Shield, FileText, GitPullRequest, AlertCircle, Loader2, X } from "lucide-react";
+import { Sparkles, Shield, FileText, GitPullRequest, AlertCircle, Loader2, X, Copy, Tag } from "lucide-react";
 import type { Issue, PullRequest } from "@/types";
 
 interface TriageResult { priority: string; effort: string; estimatedEffort?: string; suggestedLabels: string[]; summary: string; sentiment: string; }
 interface ReviewResult { summary: string; riskLevel: string; suggestedReviewers: string[]; keyChanges: string[]; potentialIssues: string[]; recommendation: string; }
 interface ScanData { riskScore?: number; vulnerabilities?: any[]; dependencyIssues?: any[]; codeIssues?: any[]; summary?: string; scannedAt?: string; }
+interface DedupResult { pairs: { issueA: number; issueB: number; similarity: string; reason: string }[]; summary: string; }
 
 interface Props { repoFullName: string; issues: Issue[]; prs: PullRequest[]; }
 
@@ -15,6 +16,8 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
   const [reviewResults, setReviewResults] = useState<ReviewResult[] | null>(null);
   const [scanData, setScanData] = useState<ScanData | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
+  const [dedupData, setDedupData] = useState<DedupResult | null>(null);
+  const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [loading, setLoading] = useState("");
   const [activeAction, setActiveAction] = useState("");
 
@@ -66,21 +69,48 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
     setLoading("");
   }, [repoFullName, changelog, activeAction]);
 
+  const runDedup = useCallback(async () => {
+    if (dedupData) { setActiveAction(activeAction === "dedup" ? "" : "dedup"); return; }
+    if (issues.length < 2) return;
+    setLoading("dedup"); setActiveAction("dedup");
+    try {
+      const res = await fetch("/api/dedup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ issues: issues.slice(0, 20).map(i => ({ number: i.number, title: i.title, body: i.body })) }) });
+      const d = await res.json();
+      if (d.success) setDedupData(d.data);
+    } catch {}
+    setLoading("");
+  }, [issues, dedupData, activeAction]);
+
+  const runReleaseNotes = useCallback(async () => {
+    if (releaseNotes) { setActiveAction(activeAction === "release" ? "" : "release"); return; }
+    setLoading("release"); setActiveAction("release");
+    try {
+      const res = await fetch("/api/release-notes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repo: repoFullName, version: "next", prs: prs.slice(0, 20).map(p => ({ title: p.title, number: p.number, author: p.author || "unknown", labels: p.labels || [] })) }) });
+      const d = await res.json();
+      if (d.success) setReleaseNotes(d.data);
+    } catch {}
+    setLoading("");
+  }, [prs, repoFullName, releaseNotes, activeAction]);
+
   const badge = (v: string) => { const c = v?.toLowerCase() || ""; if (c.includes("critical") || c.includes("high")) return "text-red-400 bg-red-500/10"; if (c.includes("medium")) return "text-yellow-400 bg-yellow-500/10"; return "text-green-400 bg-green-500/10"; };
 
   return (
     <div className="space-y-4">
       <div className="card">
         <div className="flex items-center gap-2 mb-4"><Sparkles className="w-5 h-5 text-brand-400" /><h3 className="text-lg font-semibold text-white">AI-Powered Analysis</h3></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           <button onClick={runTriage} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-orange-500 text-left transition-all disabled:opacity-50">
-            <AlertCircle className="w-5 h-5 text-orange-400 mb-1" /><div className="text-white text-sm font-medium">Triage</div><div className="text-surface-500 text-xs">{loading === "triage" ? "Working..." : triageResults ? `View (${triageResults.length})` : `${issues.length} issues`}</div></button>
+            <AlertCircle className="w-5 h-5 text-orange-400 mb-1" /><div className="text-white text-xs font-medium">Triage</div><div className="text-surface-500 text-[10px]">{loading === "triage" ? "..." : triageResults ? `Done (${triageResults.length})` : `${issues.length}`}</div></button>
           <button onClick={runReview} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-blue-500 text-left transition-all disabled:opacity-50">
-            <GitPullRequest className="w-5 h-5 text-blue-400 mb-1" /><div className="text-white text-sm font-medium">Review</div><div className="text-surface-500 text-xs">{loading === "review" ? "Working..." : reviewResults ? `View (${reviewResults.length})` : `${prs.length} PRs`}</div></button>
+            <GitPullRequest className="w-5 h-5 text-blue-400 mb-1" /><div className="text-white text-xs font-medium">Review</div><div className="text-surface-500 text-[10px]">{loading === "review" ? "..." : reviewResults ? `Done (${reviewResults.length})` : `${prs.length}`}</div></button>
+          <button onClick={runDedup} disabled={!!loading || issues.length < 2} className="p-3 rounded-lg border border-surface-700 hover:border-yellow-500 text-left transition-all disabled:opacity-50">
+            <Copy className="w-5 h-5 text-yellow-400 mb-1" /><div className="text-white text-xs font-medium">Dedup</div><div className="text-surface-500 text-[10px]">{loading === "dedup" ? "..." : dedupData ? `Done` : `${issues.length}`}</div></button>
           <button onClick={runScan} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-red-500 text-left transition-all disabled:opacity-50">
-            <Shield className="w-5 h-5 text-red-400 mb-1" /><div className="text-white text-sm font-medium">Security</div><div className="text-surface-500 text-xs">{loading === "scan" ? "Scanning..." : scanData ? "View report" : "Full audit"}</div></button>
+            <Shield className="w-5 h-5 text-red-400 mb-1" /><div className="text-white text-xs font-medium">Security</div><div className="text-surface-500 text-[10px]">{loading === "scan" ? "..." : scanData ? "Done" : "Audit"}</div></button>
+          <button onClick={runReleaseNotes} disabled={!!loading || prs.length === 0} className="p-3 rounded-lg border border-surface-700 hover:border-purple-500 text-left transition-all disabled:opacity-50">
+            <Tag className="w-5 h-5 text-purple-400 mb-1" /><div className="text-white text-xs font-medium">Release</div><div className="text-surface-500 text-[10px]">{loading === "release" ? "..." : releaseNotes ? "Done" : `${prs.length}`}</div></button>
           <button onClick={runChangelog} disabled={!!loading} className="p-3 rounded-lg border border-surface-700 hover:border-green-500 text-left transition-all disabled:opacity-50">
-            <FileText className="w-5 h-5 text-green-400 mb-1" /><div className="text-white text-sm font-medium">Changelog</div><div className="text-surface-500 text-xs">{loading === "changelog" ? "Generating..." : changelog ? "View" : "Generate"}</div></button>
+            <FileText className="w-5 h-5 text-green-400 mb-1" /><div className="text-white text-xs font-medium">Changelog</div><div className="text-surface-500 text-[10px]">{loading === "changelog" ? "..." : changelog ? "Done" : "Gen"}</div></button>
         </div>
       </div>
 
@@ -139,7 +169,34 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
         </div>
       )}
 
-      {loading && <div className="flex items-center justify-center gap-2 text-surface-400 py-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">{loading === "triage" ? "Analyzing issues with AI..." : loading === "review" ? "Reviewing PRs with AI..." : loading === "scan" ? "Running security audit..." : "Generating changelog..."}</span></div>}
+      {/* Dedup Results */}
+      {activeAction === "dedup" && dedupData && (
+        <div className="card border-yellow-500/20">
+          <div className="flex items-center justify-between mb-4"><h4 className="text-white font-semibold flex items-center gap-2"><Copy className="w-4 h-4 text-yellow-400" />Duplicate Detection</h4><button onClick={() => setActiveAction("")} className="text-surface-400 hover:text-white"><X className="w-4 h-4" /></button></div>
+          <div className="bg-surface-900 rounded-lg p-4 mb-3"><p className="text-sm text-surface-300">{dedupData.summary}</p></div>
+          {dedupData.pairs.length > 0 ? (
+            <div className="space-y-2">
+              {dedupData.pairs.map((p, i) => (
+                <div key={i} className="bg-surface-800/50 rounded-lg p-3 flex items-center gap-3">
+                  <span className="text-xs text-surface-500">#{p.issueA} ↔ #{p.issueB}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.similarity.includes("exact") ? "text-red-400 bg-red-500/10" : "text-yellow-400 bg-yellow-500/10"}`}>{p.similarity}</span>
+                  <span className="text-xs text-surface-400">{p.reason}</span>
+                </div>
+              ))}
+            </div>
+          ) : <p className="text-sm text-surface-500 text-center py-4">No duplicates found.</p>}
+        </div>
+      )}
+
+      {/* Release Notes */}
+      {activeAction === "release" && releaseNotes && (
+        <div className="card border-purple-500/20">
+          <div className="flex items-center justify-between mb-4"><h4 className="text-white font-semibold flex items-center gap-2"><Tag className="w-4 h-4 text-purple-400" />Release Notes</h4><button onClick={() => setActiveAction("")} className="text-surface-400 hover:text-white"><X className="w-4 h-4" /></button></div>
+          <div className="text-sm text-surface-300 bg-surface-900 rounded-lg p-4 overflow-auto max-h-96 leading-relaxed" dangerouslySetInnerHTML={{ __html: releaseNotes.replace(/\n/g, "<br/>").replace(/###?\s*(.+)/g, "<strong>$1</strong>").replace(/- (.*)/g, "• $1") }} />
+        </div>
+      )}
+
+      {loading && <div className="flex items-center justify-center gap-2 text-surface-400 py-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">{loading === "triage" ? "Analyzing issues..." : loading === "review" ? "Reviewing PRs..." : loading === "dedup" ? "Finding duplicates..." : loading === "scan" ? "Running security audit..." : loading === "release" ? "Generating release notes..." : "Generating changelog..."}</span></div>}
     </div>
   );
 }
