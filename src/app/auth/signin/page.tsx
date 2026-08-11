@@ -9,21 +9,13 @@ function SignInForm() {
   const callbackUrl = params?.get("callbackUrl") || "/dashboard";
   const error = params?.get("error");
   const [csrfToken, setCsrfToken] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/csrf")
       .then((r) => r.json())
       .then((d) => setCsrfToken(d.csrfToken || ""))
-      .catch(() => {});
+      .catch(() => setCsrfToken("retry"));
   }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const form = e.target as HTMLFormElement;
-    form.submit();
-  };
 
   const errorMessages: Record<string, string> = {
     OAuthSignin: "There was a problem starting GitHub sign-in.",
@@ -47,18 +39,27 @@ function SignInForm() {
             </div>
           )}
 
-          <form action="/api/auth/signin/github" method="POST" onSubmit={handleSubmit}>
-            <input type="hidden" name="csrfToken" value={csrfToken} />
-            <input type="hidden" name="callbackUrl" value={callbackUrl} />
+          {csrfToken === "retry" ? (
             <button
-              type="submit"
-              disabled={loading || !csrfToken}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:opacity-50 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
+              onClick={() => window.location.reload()}
+              className="w-full flex items-center justify-center gap-3 bg-yellow-500 hover:bg-yellow-400 text-black font-medium py-3 px-6 rounded-lg transition-colors"
             >
-              <Github className="w-5 h-5" />
-              {!csrfToken ? "Loading..." : loading ? "Redirecting..." : "Continue with GitHub"}
+              Click to retry
             </button>
-          </form>
+          ) : (
+            <form action="/api/auth/signin/github" method="POST">
+              <input type="hidden" name="csrfToken" value={csrfToken} />
+              <input type="hidden" name="callbackUrl" value={callbackUrl} />
+              <button
+                type="submit"
+                disabled={!csrfToken}
+                className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:opacity-50 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
+              >
+                <Github className="w-5 h-5" />
+                {!csrfToken ? "Loading..." : "Continue with GitHub"}
+              </button>
+            </form>
+          )}
 
           <p className="text-surface-500 text-xs mt-6">
             Only public repository access is requested. We never access private repos without explicit permission.
