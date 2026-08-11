@@ -11,22 +11,16 @@ export async function triageIssue(
   body: string | null,
   existingLabels: string[]
 ): Promise<TriageResult> {
-  const prompt = `You are an expert open-source maintainer triaging a GitHub issue. Analyze the following issue and provide a structured triage assessment.
+  const prompt = `Analyze this GitHub issue and return ONLY a JSON object (no markdown, no backticks, no other text):
 
 Title: ${title}
 Body: ${body || "No description provided."}
 Current Labels: ${existingLabels.join(", ") || "None"}
 
-Return a JSON object with these fields:
-- suggestedLabels: string[] (3-5 relevant labels like "bug", "enhancement", "documentation", "good first issue", "help wanted", etc.)
-- priority: "critical" | "high" | "medium" | "low"
-- estimatedEffort: "small" | "medium" | "large"
-- summary: string (one-sentence summary of the issue)
-- isDuplicate: boolean
-- sentiment: "positive" | "neutral" | "negative"
-- suggestedAssignee: string | null (suggest "any-maintainer" if no specific person)
+The JSON object must have these exact fields:
+{"suggestedLabels":["bug","ui"],"priority":"high","estimatedEffort":"small","summary":"short summary here","isDuplicate":false,"sentiment":"negative","suggestedAssignee":null}
 
-Only return valid JSON, no other text.`;
+Return ONLY the JSON object, nothing else.`;
 
   try {
     const client = getOpenAI();
@@ -51,13 +45,15 @@ Only return valid JSON, no other text.`;
     });
 
     const content = completion.choices[0]?.message?.content || "{}";
-    // Extract JSON — handle code blocks, markdown, and bare JSON
-    let jsonStr = content;
-    const codeBlock = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlock) jsonStr = codeBlock[1].trim();
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found in AI response");
-    const result = JSON.parse(jsonMatch[0]) as Partial<TriageResult>;
+    // Clean and parse: strip markdown fences, leading/trailing whitespace
+    let jsonStr = content
+      .replace(/^```(?:json)?\s*\n?/i, "")
+      .replace(/\n?```\s*$/i, "")
+      .trim();
+    // If response starts with a newline or text before JSON, find the first {
+    const braceIdx = jsonStr.indexOf("{");
+    if (braceIdx > 0) jsonStr = jsonStr.substring(braceIdx);
+    const result = JSON.parse(jsonStr) as Partial<TriageResult>;
 
     return {
       issueNumber: 0, // filled by caller
@@ -134,12 +130,13 @@ Only return valid JSON, no other text.`;
     });
 
     const content2 = completion2.choices[0]?.message?.content || "{}";
-    let jsonStr2 = content2;
-    const codeBlock2 = content2.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlock2) jsonStr2 = codeBlock2[1].trim();
-    const jsonMatch2 = jsonStr2.match(/\{[\s\S]*\}/);
-    if (!jsonMatch2) throw new Error("No JSON found in AI review response");
-    const result2 = JSON.parse(jsonMatch2[0]) as Partial<PRReviewResult>;
+    let jsonStr2 = content2
+      .replace(/^```(?:json)?\s*\n?/i, "")
+      .replace(/\n?```\s*$/i, "")
+      .trim();
+    const braceIdx2 = jsonStr2.indexOf("{");
+    if (braceIdx2 > 0) jsonStr2 = jsonStr2.substring(braceIdx2);
+    const result2 = JSON.parse(jsonStr2) as Partial<PRReviewResult>;
 
     return {
       prNumber: 0,
