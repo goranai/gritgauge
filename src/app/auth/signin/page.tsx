@@ -2,9 +2,9 @@
 
 import { Github } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
-export default function SignInPage() {
+function SignInForm() {
   const params = useSearchParams();
   const callbackUrl = params?.get("callbackUrl") || "/dashboard";
   const error = params?.get("error");
@@ -66,5 +66,13 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface-950" />}>
+      <SignInForm />
+    </Suspense>
   );
 }
