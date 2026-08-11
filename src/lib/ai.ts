@@ -45,14 +45,13 @@ Return ONLY the JSON object, nothing else.`;
     });
 
     const content = completion.choices[0]?.message?.content || "{}";
-    // Clean and parse: strip markdown fences, leading/trailing whitespace
-    let jsonStr = content
-      .replace(/^```(?:json)?\s*\n?/i, "")
-      .replace(/\n?```\s*$/i, "")
-      .trim();
-    // If response starts with a newline or text before JSON, find the first {
-    const braceIdx = jsonStr.indexOf("{");
-    if (braceIdx > 0) jsonStr = jsonStr.substring(braceIdx);
+    // Nuclear JSON extraction: find first {, find matching }, parse that
+    const start = content.indexOf("{");
+    const end = content.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) {
+      throw new Error("No JSON object found in AI response: " + content.substring(0, 100));
+    }
+    const jsonStr = content.substring(start, end + 1);
     const result = JSON.parse(jsonStr) as Partial<TriageResult>;
 
     return {
@@ -130,13 +129,12 @@ Only return valid JSON, no other text.`;
     });
 
     const content2 = completion2.choices[0]?.message?.content || "{}";
-    let jsonStr2 = content2
-      .replace(/^```(?:json)?\s*\n?/i, "")
-      .replace(/\n?```\s*$/i, "")
-      .trim();
-    const braceIdx2 = jsonStr2.indexOf("{");
-    if (braceIdx2 > 0) jsonStr2 = jsonStr2.substring(braceIdx2);
-    const result2 = JSON.parse(jsonStr2) as Partial<PRReviewResult>;
+    const s2 = content2.indexOf("{");
+    const e2 = content2.lastIndexOf("}");
+    if (s2 === -1 || e2 === -1 || e2 <= s2) {
+      throw new Error("No JSON found in review response");
+    }
+    const result2 = JSON.parse(content2.substring(s2, e2 + 1)) as Partial<PRReviewResult>;
 
     return {
       prNumber: 0,
