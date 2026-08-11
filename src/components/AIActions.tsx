@@ -96,15 +96,21 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
     setScanning(true);
     setActiveAction("security");
     try {
+      const [owner, name] = repoFullName.split("/");
       const res = await fetch("/api/security", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: repoFullName, scanType: "full" }),
+        body: JSON.stringify({ repo: repoFullName, scanType: "full", targetRef: "main" }),
       });
       const data = await res.json();
-      setScanResult(data.success ? JSON.stringify(data.result || data, null, 2) : "Scan failed");
-    } catch {
-      setScanResult("Security scan failed. Try again.");
+      if (data.success) {
+        const result = data.data || data.result || data;
+        setScanResult(typeof result === "string" ? result : JSON.stringify(result, null, 2));
+      } else {
+        setScanResult("Scan error: " + (data.error || "Unknown"));
+      }
+    } catch (e: any) {
+      setScanResult("Security scan failed: " + e.message);
     }
     setScanning(false);
   };
@@ -116,12 +122,22 @@ export default function AIActions({ repoFullName, issues, prs }: Props) {
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: repoFullName, format: "markdown", type: "changelog" }),
+        body: JSON.stringify({ type: "activity", format: "markdown", title: `Changelog - ${repoFullName}`, repoId: repoFullName }),
       });
-      const data = await res.json();
-      setChangelog(data.success ? data.content || data.data : "Generation failed");
-    } catch {
-      setChangelog("Changelog generation failed. Try again.");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setChangelog("Generation failed: " + (errData.error || res.statusText));
+      } else {
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("text")) {
+          setChangelog(await res.text());
+        } else {
+          const data = await res.json();
+          setChangelog(data.content || data.data || JSON.stringify(data, null, 2));
+        }
+      }
+    } catch (e: any) {
+      setChangelog("Changelog generation failed: " + e.message);
     }
     setGenerating(false);
   };
