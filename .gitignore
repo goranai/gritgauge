@@ -35,3 +35,5 @@ next-env.d.ts
 .env.prod
 cookies.txt
 response.html
+ci_logs.zip
+ci_logs/
