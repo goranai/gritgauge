@@ -1,9 +1,21 @@
 import OpenAI from "openai";
 import type { TriageResult, PRReviewResult } from "@/types";
 
-function getOpenAI(): OpenAI | null {
-  if (!process.env.OPENAI_API_KEY) return null;
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getAI(): { client: OpenAI; model: string } | null {
+  // Use DeepSeek if available, fall back to OpenAI
+  if (process.env.DEEPSEEK_API_KEY) {
+    return {
+      client: new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" }),
+      model: "deepseek-chat",
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
+      model: "gpt-4o-mini",
+    };
+  }
+  return null;
 }
 
 export async function triageIssue(
@@ -23,22 +35,22 @@ The JSON object must have these exact fields:
 Return ONLY the JSON object, nothing else.`;
 
   try {
-    const client = getOpenAI();
-    if (!client) {
-      return { issueNumber: 0, suggestedLabels: ["no-key"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "OpenAI key not configured.", isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
+    const ai = getAI();
+    if (!ai) {
+      return { issueNumber: 0, suggestedLabels: ["no-key"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "No AI API key configured.", isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
     }
     
     let raw = "";
     try {
-      const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
+      const completion = await ai.client.chat.completions.create({
+        model: ai.model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
         max_tokens: 500,
       });
       raw = completion.choices[0]?.message?.content || "";
     } catch (apiErr: any) {
-      return { issueNumber: 0, suggestedLabels: ["api-error"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "OpenAI API error: " + (apiErr?.message || "unknown"), isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
+      return { issueNumber: 0, suggestedLabels: ["api-error"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "AI API error: " + (apiErr?.message || "unknown"), isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
     }
 
     // Parse whatever JSON we can find
@@ -103,21 +115,12 @@ Return a JSON object with these fields:
 Only return valid JSON, no other text.`;
 
   try {
-    const client2 = getOpenAI();
-    if (!client2) {
-      return {
-        prNumber: 0,
-        summary: "OpenAI API key not configured.",
-        riskLevel: "medium",
-        suggestedReviewers: [],
-        keyChanges: [],
-        potentialIssues: [],
-        testCoverageNote: "N/A",
-        recommendation: "comment",
-      };
+    const ai = getAI();
+    if (!ai) {
+      return { prNumber: 0, summary: "No AI API key configured.", riskLevel: "medium", suggestedReviewers: [], keyChanges: [], potentialIssues: [], testCoverageNote: "N/A", recommendation: "comment" };
     }
-    const completion2 = await client2.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion2 = await ai.client.chat.completions.create({
+      model: ai.model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 600,
@@ -178,10 +181,10 @@ Group them into:
 Return only the changelog in markdown format.`;
 
   try {
-    const client3 = getOpenAI();
-    if (!client3) return "Changelog generation requires OpenAI API key.";
-    const completion3 = await client3.chat.completions.create({
-      model: "gpt-4o-mini",
+    const ai = getAI();
+    if (!ai) return "Changelog generation requires an AI API key.";
+    const completion3 = await ai.client.chat.completions.create({
+      model: ai.model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.5,
       max_tokens: 1000,
