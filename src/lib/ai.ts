@@ -1,9 +1,10 @@
 import OpenAI from "openai";
 import type { TriageResult, PRReviewResult } from "@/types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function triageIssue(
   title: string,
@@ -93,26 +94,39 @@ Return a JSON object with these fields:
 Only return valid JSON, no other text.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const client2 = getOpenAI();
+    if (!client2) {
+      return {
+        prNumber: 0,
+        summary: "OpenAI API key not configured.",
+        riskLevel: "medium",
+        suggestedReviewers: [],
+        keyChanges: [],
+        potentialIssues: [],
+        testCoverageNote: "N/A",
+        recommendation: "comment",
+      };
+    }
+    const completion2 = await client2.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 600,
     });
 
-    const content = completion.choices[0]?.message?.content || "{}";
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const result = JSON.parse(jsonMatch ? jsonMatch[0] : content) as Partial<PRReviewResult>;
+    const content2 = completion2.choices[0]?.message?.content || "{}";
+    const jsonMatch2 = content2.match(/\{[\s\S]*\}/);
+    const result2 = JSON.parse(jsonMatch2 ? jsonMatch2[0] : content2) as Partial<PRReviewResult>;
 
     return {
       prNumber: 0,
-      summary: result.summary || "Unable to generate review summary.",
-      riskLevel: result.riskLevel || "medium",
-      suggestedReviewers: result.suggestedReviewers || [],
-      keyChanges: result.keyChanges || [],
-      potentialIssues: result.potentialIssues || [],
-      testCoverageNote: result.testCoverageNote || "Unable to assess test coverage.",
-      recommendation: result.recommendation || "comment",
+      summary: result2.summary || "Unable to generate review summary.",
+      riskLevel: result2.riskLevel || "medium",
+      suggestedReviewers: result2.suggestedReviewers || [],
+      keyChanges: result2.keyChanges || [],
+      potentialIssues: result2.potentialIssues || [],
+      testCoverageNote: result2.testCoverageNote || "Unable to assess test coverage.",
+      recommendation: result2.recommendation || "comment",
     };
   } catch {
     return {
@@ -150,14 +164,16 @@ Group them into:
 Return only the changelog in markdown format.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const client3 = getOpenAI();
+    if (!client3) return "Changelog generation requires OpenAI API key.";
+    const completion3 = await client3.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.5,
       max_tokens: 1000,
     });
 
-    return completion.choices[0]?.message?.content || "Unable to generate changelog.";
+    return completion3.choices[0]?.message?.content || "Unable to generate changelog.";
   } catch {
     return "## Changelog\n\nUnable to generate changelog automatically.";
   }

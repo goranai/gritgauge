@@ -240,7 +240,7 @@ Return JSON:
 Only return valid JSON.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await (getOpenAI()!).chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
@@ -302,3 +302,4 @@ export async function fullCodeQualityAssessment(
     technicalDebtEstimate: overallScore > 70 ? "1-2 weeks" : overallScore > 50 ? "2-4 weeks" : "1-3 months",
   };
 }
+

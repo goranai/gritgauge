@@ -1,9 +1,10 @@
 import OpenAI from "openai";
 import type { SecurityScanResult, Vulnerability, DependencyIssue, CodeIssue } from "@/types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function scanPRForVulnerabilities(
   prTitle: string,
@@ -48,7 +49,7 @@ Return JSON:
 Only return valid JSON.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await (getOpenAI()!).chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
@@ -99,7 +100,7 @@ Return JSON:
 Only return valid JSON.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await (getOpenAI()!).chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
@@ -141,7 +142,7 @@ Provide a final security assessment. Return JSON:
 Only return valid JSON.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await (getOpenAI()!).chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
@@ -177,3 +178,4 @@ Only return valid JSON.`;
     };
   }
 }
+

@@ -247,7 +247,10 @@ export function getAllRecommendations(
 
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function generateAIRecommendations(
   projectName: string,
@@ -268,7 +271,7 @@ Additional Context: ${context}
 Return exactly 5 recommendations as a JSON array of strings. Each should be specific, actionable, and include expected impact.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await (getOpenAI()!).chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
@@ -288,3 +291,4 @@ Return exactly 5 recommendations as a JSON array of strings. Each should be spec
     ];
   }
 }
+

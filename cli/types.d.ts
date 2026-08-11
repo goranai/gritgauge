@@ -1,19 +1,16 @@
 declare module "gradient-string" {
-  interface Gradient {
+  const gradient: {
     (text: string): string;
-    pastel: Gradient;
-    teen: Gradient;
-    summer: Gradient;
-  }
-  const gradient: Gradient;
+    pastel: (text: string) => string;
+  };
   export default gradient;
 }
 
 declare module "figlet" {
-  function figlet(text: string, options?: Record<string, unknown>, callback?: (err: Error | null, result: string) => void): void;
-  function textSync(text: string, options?: Record<string, unknown>): string;
-  export default figlet;
-  export { textSync };
+  namespace figlet {
+    function textSync(text: string, options?: Record<string, unknown>): string;
+  }
+  export = figlet;
 }
 
 declare module "boxen" {
