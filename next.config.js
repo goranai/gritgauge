@@ -14,10 +14,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  env: {
-    GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  },
+  // NOTE: DO NOT add sensitive keys here — this exposes them to the browser.
+  // Server-side env vars are accessed via process.env in API routes and server components only.
 };
 
 module.exports = nextConfig;
