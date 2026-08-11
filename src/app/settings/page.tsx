@@ -46,6 +46,9 @@ export default function SettingsPage() {
           setSettings((prev) => ({ ...prev, ...data.data }));
         }
       })
+      .catch(() => {
+        // Use defaults if API fails
+      })
       .finally(() => setLoading(false));
   }, []);
 
