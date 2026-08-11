@@ -4,26 +4,41 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: settings || {
+        theme: "dark",
+        defaultPage: "dashboard",
+        emailNotifications: true,
+        triageAutoLabel: false,
+        reviewAutoApprove: false,
+        maxDailyApiCalls: 500,
+      },
+    });
+  } catch (err) {
+    console.error("Settings GET error:", err);
+    return NextResponse.json({
+      success: true,
+      data: {
+        theme: "dark",
+        defaultPage: "dashboard",
+        emailNotifications: true,
+        triageAutoLabel: false,
+        reviewAutoApprove: false,
+        maxDailyApiCalls: 500,
+      },
+    });
   }
-
-  const settings = await prisma.userSettings.findUnique({
-    where: { userId: session.user.id },
-  });
-
-  return NextResponse.json({
-    success: true,
-    data: settings || {
-      theme: "dark",
-      defaultPage: "dashboard",
-      emailNotifications: true,
-      triageAutoLabel: false,
-      reviewAutoApprove: false,
-      maxDailyApiCalls: 500,
-    },
-  });
 }
 
 export async function PUT(request: NextRequest) {
