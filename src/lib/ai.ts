@@ -25,17 +25,7 @@ Return ONLY the JSON object, nothing else.`;
   try {
     const client = getOpenAI();
     if (!client) {
-      return {
-        issueNumber: 0,
-        suggestedLabels: ["triage-needed"],
-        priority: "medium",
-        estimatedEffort: "medium",
-        suggestedAssignee: null,
-        summary: "OpenAI API key not configured.",
-        isDuplicate: false,
-        duplicateOf: null,
-        sentiment: "neutral",
-      };
+      return { issueNumber: 0, suggestedLabels: ["no-key"], priority: "medium", estimatedEffort: "medium", suggestedAssignee: null, summary: "OpenAI key not configured.", isDuplicate: false, duplicateOf: null, sentiment: "neutral" };
     }
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -44,26 +34,25 @@ Return ONLY the JSON object, nothing else.`;
       max_tokens: 500,
     });
 
-    const content = completion.choices[0]?.message?.content || "{}";
-    // Nuclear JSON extraction: find first {, find matching }, parse that
-    const start = content.indexOf("{");
-    const end = content.lastIndexOf("}");
-    if (start === -1 || end === -1 || end <= start) {
-      throw new Error("No JSON object found in AI response: " + content.substring(0, 100));
+    const raw = completion.choices[0]?.message?.content || "";
+    // Parse whatever JSON we can find
+    const s = raw.indexOf("{");
+    const e = raw.lastIndexOf("}");
+    let parsed: Partial<TriageResult> = {};
+    if (s >= 0 && e > s) {
+      try { parsed = JSON.parse(raw.substring(s, e + 1)); } catch {}
     }
-    const jsonStr = content.substring(start, end + 1);
-    const result = JSON.parse(jsonStr) as Partial<TriageResult>;
-
+    
     return {
-      issueNumber: 0, // filled by caller
-      suggestedLabels: result.suggestedLabels || [],
-      priority: result.priority || "medium",
-      estimatedEffort: result.estimatedEffort || "medium",
-      suggestedAssignee: result.suggestedAssignee || null,
-      summary: result.summary || "No summary available.",
-      isDuplicate: result.isDuplicate || false,
+      issueNumber: 0,
+      suggestedLabels: parsed.suggestedLabels || ["ai-processed"],
+      priority: parsed.priority || "medium",
+      estimatedEffort: parsed.estimatedEffort || "medium", 
+      suggestedAssignee: parsed.suggestedAssignee || null,
+      summary: parsed.summary || raw.substring(0, 200),
+      isDuplicate: parsed.isDuplicate || false,
       duplicateOf: null,
-      sentiment: result.sentiment || "neutral",
+      sentiment: parsed.sentiment || "neutral",
     };
   } catch (err: any) {
     console.error("[AI] triage error:", err?.message || err);
