@@ -1,64 +1,45 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/your-username/gritgauge/main/public/logo.svg" alt="GritGauge Logo" width="120" />
-</p>
+# GritGauge
 
-<h1 align="center">GritGauge</h1>
+**AI-powered tools for open-source maintainers — issue triage, PR reviews, security scanning, and project health tracking.**
 
-<p align="center">
-  <strong>AI Co-Pilot for Open-Source Maintainers</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/your-username/gritgauge/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  </a>
-  <a href="https://github.com/your-username/gritgauge/stargazers">
-    <img src="https://img.shields.io/github/stars/your-username/gritgauge?style=social" alt="Stars" />
-  </a>
-  <a href="https://github.com/your-username/gritgauge/issues">
-    <img src="https://img.shields.io/github/issues/your-username/gritgauge" alt="Issues" />
-  </a>
-  <a href="https://github.com/your-username/gritgauge/pulls">
-    <img src="https://img.shields.io/github/issues-pr/your-username/gritgauge" alt="Pull Requests" />
-  </a>
-</p>
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/goranai/gritgauge/blob/main/LICENSE)
+[![Stars](https://img.shields.io/github/stars/goranai/gritgauge?style=social)](https://github.com/goranai/gritgauge/stargazers)
 
 ---
 
-## 🚀 What is GritGauge?
+## What is GritGauge?
 
-**GritGauge** is an AI-powered dashboard that helps open-source maintainers automate the tedious parts of project maintenance — issue triage, PR reviews, release changelogs, and project health monitoring.
+GritGauge handles the repetitive maintenance work that eats up your time — triaging issues, reviewing PRs, tracking project health, and generating changelogs. It uses AI to do the heavy lifting so you can focus on actually writing code.
 
-Built with ❤️ for the open-source community. **100% free and open source.**
+Free and open source under MIT.
 
-### 🎯 The Problem
+### The Problem
 
-Open-source maintainers are drowning in:
-- 📥 **Hundreds of unread issues** with no labels or priority
-- 🔍 **PRs sitting for weeks** waiting for review
-- 📊 **No visibility** into project health, bus factor, or community trends
-- 📝 **Hours spent writing changelogs** instead of shipping code
+Maintainers spend too much time on:
+- Issues piling up with no labels, no priority, no owner
+- PRs sitting unreviewed for weeks
+- No clear picture of project health — bus factor, response times, contributor churn
+- Manually writing changelogs for every release
 
-### 💡 The Solution
+### What GritGauge Does
 
-GritGauge uses **AI (OpenAI / ChatGPT)** to:
-- Auto-triage issues with labels, priority, effort estimates, and sentiment analysis
-- Generate instant PR review summaries with risk assessment
-- Compute a real-time project health score
-- Auto-generate categorized changelogs from merged PRs
+- AI triages your issues — labels them, prioritizes them, detects duplicates, reads sentiment
+- AI reviews your PRs — risk assessment, change summaries, flags potential problems
+- Real-time health dashboard — bus factor, stale issue ratio, response times, contributor trends
+- Auto-generated changelogs from merged PRs
 
 ---
 
 ## ✨ Features
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| **🤖 AI Issue Triage** | Auto-label, prioritize, detect duplicates, analyze sentiment | ✅ Stable |
-| **🔍 PR Review Assistant** | Risk assessment, change summaries, suggested reviewers | ✅ Stable |
-| **📊 Health Dashboard** | Bus factor, response time, stale ratio, contributor trends | ✅ Stable |
-| **📝 Changelog Generator** | Categorized changelogs from merged PRs | 🚧 Beta |
-| **🛡️ Security Spotlight** | Flag risky file changes and dependency vulnerabilities | 🚧 Beta |
-| **🌐 Community Insights** | Contributor diversity, first-time contributor tracking | 🚧 Planned |
+| Module | What it does |
+|--------|-------------|
+| AI Issue Triage | Auto-label, prioritize, detect duplicates, analyze sentiment |
+| PR Review Assistant | Risk assessment, change summaries, flags security concerns |
+| Health Dashboard | Bus factor, response time, stale ratio, contributor trends |
+| Changelog Generator | Categorized changelogs from merged PRs |
+| Security Spotlight | Flag risky file changes and dependency vulnerabilities |
+| Community Insights | Contributor stats, first-time contributor tracking |
 
 ---
 
@@ -91,7 +72,7 @@ GritGauge uses **AI (OpenAI / ChatGPT)** to:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Node.js** 18+ 
@@ -102,7 +83,7 @@ GritGauge uses **AI (OpenAI / ChatGPT)** to:
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/gritgauge.git
+git clone https://github.com/goranai/gritgauge.git
 cd gritgauge
 npm install
 ```
@@ -219,48 +200,14 @@ gritgauge/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-We love contributions! GritGauge is built for the community, by the community.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for dev setup, code guidelines, and how to submit PRs.
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
-- How to set up the dev environment
-- Code style guidelines
-- How to submit issues and PRs
-- Project roadmap
+## License
 
-**Good First Issues** are tagged and ready for new contributors!
+MIT — see [LICENSE](./LICENSE) for details.
 
----
+## Acknowledgments
 
-## 📜 License
-
-MIT © [Your Name]
-
-See [LICENSE](./LICENSE) for full details.
-
----
-
-## ⭐ Support the Project
-
-If GritGauge helps you maintain your open-source projects:
-
-- **Star this repo** ⭐ — it helps others discover the project
-- **Share it** with fellow maintainers
-- **Contribute** — see [CONTRIBUTING.md](./CONTRIBUTING.md)
-- **Sponsor** — help us cover API costs and keep GritGauge free
-
----
-
-## 🙏 Acknowledgments
-
-- Built with [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/), and [Lucide Icons](https://lucide.dev/)
-- Powered by [OpenAI](https://openai.com/) and [GitHub API](https://docs.github.com/en/rest)
-- Inspired by the struggles of open-source maintainers everywhere ❤️
-
----
-
-<p align="center">
-  <strong>Maintain smarter, not harder.</strong><br/>
-  <sub>Built with ❤️ for the open-source community</sub>
-</p>
+Built with Next.js, Tailwind CSS, and the OpenAI API. Inspired by the daily struggles of maintaining open-source projects.
