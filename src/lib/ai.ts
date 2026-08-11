@@ -29,7 +29,21 @@ Return a JSON object with these fields:
 Only return valid JSON, no other text.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const client = getOpenAI();
+    if (!client) {
+      return {
+        issueNumber: 0,
+        suggestedLabels: ["triage-needed"],
+        priority: "medium",
+        estimatedEffort: "medium",
+        suggestedAssignee: null,
+        summary: "OpenAI API key not configured.",
+        isDuplicate: false,
+        duplicateOf: null,
+        sentiment: "neutral",
+      };
+    }
+    const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
@@ -52,14 +66,15 @@ Only return valid JSON, no other text.`;
       duplicateOf: null,
       sentiment: result.sentiment || "neutral",
     };
-  } catch {
+  } catch (err: any) {
+    console.error("[AI] triage error:", err?.message || err);
     return {
       issueNumber: 0,
       suggestedLabels: ["triage-needed"],
       priority: "medium",
       estimatedEffort: "medium",
       suggestedAssignee: null,
-      summary: "AI triage unavailable — manual review needed.",
+      summary: `AI error: ${err?.message || "unknown"}`,
       isDuplicate: false,
       duplicateOf: null,
       sentiment: "neutral",
@@ -128,10 +143,11 @@ Only return valid JSON, no other text.`;
       testCoverageNote: result2.testCoverageNote || "Unable to assess test coverage.",
       recommendation: result2.recommendation || "comment",
     };
-  } catch {
+  } catch (err: any) {
+    console.error("[AI] reviewPR error:", err?.message || err);
     return {
       prNumber: 0,
-      summary: "AI review unavailable — manual review needed.",
+      summary: `AI review error: ${err?.message || "unknown"}`,
       riskLevel: "medium",
       suggestedReviewers: [],
       keyChanges: [],
@@ -174,7 +190,8 @@ Return only the changelog in markdown format.`;
     });
 
     return completion3.choices[0]?.message?.content || "Unable to generate changelog.";
-  } catch {
-    return "## Changelog\n\nUnable to generate changelog automatically.";
+  } catch (err: any) {
+    console.error("[AI] changelog error:", err?.message || err);
+    return `## Changelog\n\nGeneration error: ${err?.message || "unknown"}`;
   }
 }
