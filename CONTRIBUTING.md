@@ -1,6 +1,6 @@
 # Contributing to GritGauge
 
-First off, thank you for considering contributing to GritGauge! 🎉
+First off, thanks for considering contributing to GritGauge.
 
 GritGauge is an AI-powered co-pilot for open-source maintainers, and we welcome contributions of all kinds — code, documentation, bug reports, feature ideas, and design improvements.
 
@@ -25,22 +25,22 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 ## How Can I Contribute?
 
-### 🐛 Report Bugs
+### Report Bugs
 - Search existing issues first to avoid duplicates
 - Use the **Bug Report** template
 - Include: steps to reproduce, expected vs actual behavior, environment details
 
-### 💡 Suggest Features
+### Suggest Features
 - Check the [Roadmap](#) to see if it's already planned
 - Open a **Feature Request** issue
 - Explain the problem you're solving and why it matters for maintainers
 
-### 📚 Improve Documentation
+### Improve Documentation
 - Fix typos, add examples, improve clarity
 - Add JSDoc comments to functions
 - Translate docs (coming soon)
 
-### 💻 Write Code
+### Write Code
 - Look for issues tagged `good first issue` or `help wanted`
 - Comment on the issue to claim it
 - Follow the development setup below
@@ -169,4 +169,4 @@ A maintainer will review your PR within 48 hours. We may suggest changes — tha
 
 Open a [Discussion](https://github.com/your-username/gritgauge/discussions) or reach out to the maintainers.
 
-**Happy contributing!** 🚀
+Happy contributing.
