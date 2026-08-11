@@ -51,13 +51,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Save report
-    const report = await prisma.report.create({
-      data: {
-        userId: session.user.id,
-        repoId: repoId || null,
-        title,
-        type,
+    // Try to save report (non-critical)
+    try {
+      await prisma.report.create({
+        data: {
+          userId: session.user.id,
+          repoId: repoId || null,
+          title,
+          type,
         format,
         data: reportData,
       },
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, data: report });
+    return NextResponse.json({ success: true, data: reportData });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -113,3 +114,4 @@ function generateMarkdown(
 
   return md;
 }
+

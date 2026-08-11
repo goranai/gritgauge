@@ -44,17 +44,19 @@ export async function POST(request: NextRequest) {
         result = await fullSecurityAudit(repo, "Full codebase scan", [], []);
     }
 
-    // Save scan result
-    const scan = await prisma.securityScan.create({
-      data: {
-        repoId: "manual", // In production, look up by owner/name
-        scanType,
-        targetRef: targetRef || null,
-        vulnerabilities: result.vulnerabilities || [],
-        riskScore: result.riskScore || 0,
-        summary: result.summary || "Scan completed",
-      },
-    });
+    // Save scan result (non-critical - don't fail if repo not saved)
+    try {
+      await prisma.securityScan.create({
+        data: {
+          repoId: repo,
+          scanType,
+          targetRef: targetRef || null,
+          vulnerabilities: result.vulnerabilities || [],
+          riskScore: result.riskScore || 0,
+          summary: result.summary || "Scan completed",
+        },
+      });
+    } catch { /* repo not saved yet */ }
 
     return NextResponse.json({
       success: true,

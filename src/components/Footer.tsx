@@ -56,9 +56,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors flex items-center gap-1.5">
+                <a href="https://github.com/goranai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <Heart className="w-4 h-4" />
-                  Sponsor
+                  Follow @goranai
                 </a>
               </li>
             </ul>
