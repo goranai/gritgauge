@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AIActions from "@/components/AIActions";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RepoInput from "@/components/RepoInput";
@@ -317,6 +318,9 @@ export default function DashboardPage() {
                   </button>
                 ))}
               </div>
+
+              {/* AI Actions */}
+              <AIActions repoFullName={repo.fullName} issues={issues} prs={prs} />
 
               {/* Tab Content */}
               {activeTab === "overview" && (
