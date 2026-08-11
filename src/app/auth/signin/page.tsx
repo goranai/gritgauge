@@ -1,25 +1,29 @@
+"use client";
+
 import { Github } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-async function getCsrfToken(): Promise<string> {
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || "http://localhost:3000";
-    const url = `${baseUrl}/api/auth/csrf`;
-    const res = await fetch(url, { cache: "no-store" });
-    const data = await res.json();
-    return data.csrfToken || "";
-  } catch {
-    return "";
-  }
-}
+export default function SignInPage() {
+  const params = useSearchParams();
+  const callbackUrl = params?.get("callbackUrl") || "/dashboard";
+  const error = params?.get("error");
+  const [csrfToken, setCsrfToken] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default async function SignInPage({
-  searchParams,
-}: {
-  searchParams: { callbackUrl?: string; error?: string };
-}) {
-  const csrfToken = await getCsrfToken();
-  const callbackUrl = searchParams.callbackUrl || "/dashboard";
-  const error = searchParams.error;
+  useEffect(() => {
+    fetch("/api/auth/csrf")
+      .then((r) => r.json())
+      .then((d) => setCsrfToken(d.csrfToken || ""))
+      .catch(() => {});
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const form = e.target as HTMLFormElement;
+    form.submit();
+  };
 
   const errorMessages: Record<string, string> = {
     OAuthSignin: "There was a problem starting GitHub sign-in.",
@@ -43,15 +47,16 @@ export default async function SignInPage({
             </div>
           )}
 
-          <form action="/api/auth/signin/github" method="POST">
+          <form action="/api/auth/signin/github" method="POST" onSubmit={handleSubmit}>
             <input type="hidden" name="csrfToken" value={csrfToken} />
             <input type="hidden" name="callbackUrl" value={callbackUrl} />
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
+              disabled={loading || !csrfToken}
+              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:opacity-50 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
             >
               <Github className="w-5 h-5" />
-              Continue with GitHub
+              {!csrfToken ? "Loading..." : loading ? "Redirecting..." : "Continue with GitHub"}
             </button>
           </form>
 
