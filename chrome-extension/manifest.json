@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "GritGauge — Repo Health at a Glance",
+  "version": "1.0.0",
+  "description": "See project health scores, AI triage results, and PR reviews directly on GitHub pages.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://github.com/*", "https://api.github.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options.html"
+}

@@ -1,0 +1,174 @@
+{
+  "name": "gritgauge-vscode",
+  "displayName": "GritGauge — AI Maintainer Tools",
+  "description": "AI-powered issue triage, PR reviews, and project health tracking — directly in VS Code",
+  "version": "1.0.0",
+  "publisher": "gritgauge",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/gritgauge"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Linters",
+    "Testing"
+  ],
+  "keywords": [
+    "github",
+    "open-source",
+    "maintainer",
+    "triage",
+    "code-review",
+    "ai",
+    "analytics"
+  ],
+  "activationEvents": [
+    "onView:gritgauge.dashboard",
+    "onCommand:gritgauge.triageIssue",
+    "onCommand:gritgauge.reviewPR",
+    "onCommand:gritgauge.checkHealth",
+    "onCommand:gritgauge.openDashboard"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gritgauge-sidebar",
+          "title": "GritGauge",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "gritgauge-sidebar": [
+        {
+          "id": "gritgauge.dashboard",
+          "name": "Dashboard"
+        },
+        {
+          "id": "gritgauge.issues",
+          "name": "Issues"
+        },
+        {
+          "id": "gritgauge.pullRequests",
+          "name": "Pull Requests"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gritgauge.triageIssue",
+        "title": "GritGauge: Triage Current Issue"
+      },
+      {
+        "command": "gritgauge.reviewPR",
+        "title": "GritGauge: Review Current PR"
+      },
+      {
+        "command": "gritgauge.checkHealth",
+        "title": "GritGauge: Check Project Health"
+      },
+      {
+        "command": "gritgauge.openDashboard",
+        "title": "GritGauge: Open Web Dashboard"
+      },
+      {
+        "command": "gritgauge.scanSecurity",
+        "title": "GritGauge: Security Scan"
+      },
+      {
+        "command": "gritgauge.generateChangelog",
+        "title": "GritGauge: Generate Changelog"
+      },
+      {
+        "command": "gritgauge.addRepo",
+        "title": "GritGauge: Add Repository"
+      },
+      {
+        "command": "gritgauge.refresh",
+        "title": "GritGauge: Refresh Data"
+      }
+    ],
+    "configuration": {
+      "title": "GritGauge",
+      "properties": {
+        "gritgauge.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "GritGauge API URL (self-hosted or cloud)"
+        },
+        "gritgauge.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authentication"
+        },
+        "gritgauge.autoTriage": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically triage issues when opened"
+        },
+        "gritgauge.notifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show in-editor notifications"
+        },
+        "gritgauge.refreshInterval": {
+          "type": "number",
+          "default": 300,
+          "description": "Data refresh interval in seconds"
+        },
+        "gritgauge.showHealthBadge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show health score in status bar"
+        }
+      }
+    },
+    "menus": {
+      "scm/title": [
+        {
+          "command": "gritgauge.triageIssue",
+          "when": "scmProvider == git",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "gritgauge.reviewPR",
+          "when": "editorLangId == markdown && resourcePath =~ /pull_request/",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gritgauge.triageIssue",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t"
+      },
+      {
+        "command": "gritgauge.reviewPR",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0",
+    "eslint": "^8.0.0"
+  }
+}
