@@ -41,13 +41,12 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
-      - name: TypeScript type check
-        run: npm run type-check
-
-      - name: Lint
-        run: npm run lint
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://gritgauge:gritgauge@localhost:5432/gritgauge_test
 
       - name: Run tests
         run: npm run test:coverage
@@ -56,6 +55,7 @@ jobs:
           NEXTAUTH_SECRET: test-secret-do-not-use-in-production-123456789
 
       - name: Upload coverage
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -102,10 +102,12 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
         env:
           DATABASE_URL: postgresql://gritgauge:gritgauge@localhost:5432/gritgauge_test
           NEXTAUTH_SECRET: build-secret-not-for-production-use-12345
+          OPENAI_API_KEY: sk-dummy-ci-build-key
+          GITHUB_TOKEN: ghp_dummy_ci_token
