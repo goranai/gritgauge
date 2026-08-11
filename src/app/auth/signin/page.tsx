@@ -1,21 +1,12 @@
-"use client";
-
 import { Github } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
 
-function SignInForm() {
-  const params = useSearchParams();
-  const callbackUrl = params?.get("callbackUrl") || "/dashboard";
-  const error = params?.get("error");
-  const [csrfToken, setCsrfToken] = useState("");
-
-  useEffect(() => {
-    fetch("/api/auth/csrf")
-      .then((r) => r.json())
-      .then((d) => setCsrfToken(d.csrfToken || ""))
-      .catch(() => setCsrfToken("retry"));
-  }, []);
+export default function SignInPage({
+  searchParams,
+}: {
+  searchParams: { callbackUrl?: string; error?: string };
+}) {
+  const callbackUrl = searchParams.callbackUrl || "/dashboard";
+  const error = searchParams.error;
 
   const errorMessages: Record<string, string> = {
     OAuthSignin: "There was a problem starting GitHub sign-in.",
@@ -39,27 +30,13 @@ function SignInForm() {
             </div>
           )}
 
-          {csrfToken === "retry" ? (
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full flex items-center justify-center gap-3 bg-yellow-500 hover:bg-yellow-400 text-black font-medium py-3 px-6 rounded-lg transition-colors"
-            >
-              Click to retry
-            </button>
-          ) : (
-            <form action="/api/auth/signin/github" method="POST">
-              <input type="hidden" name="csrfToken" value={csrfToken} />
-              <input type="hidden" name="callbackUrl" value={callbackUrl} />
-              <button
-                type="submit"
-                disabled={!csrfToken}
-                className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:opacity-50 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
-              >
-                <Github className="w-5 h-5" />
-                {!csrfToken ? "Loading..." : "Continue with GitHub"}
-              </button>
-            </form>
-          )}
+          <a
+            href={`/auth/github?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors no-underline inline-flex"
+          >
+            <Github className="w-5 h-5" />
+            Continue with GitHub
+          </a>
 
           <p className="text-surface-500 text-xs mt-6">
             Only public repository access is requested. We never access private repos without explicit permission.
@@ -67,13 +44,5 @@ function SignInForm() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-surface-950" />}>
-      <SignInForm />
-    </Suspense>
   );
 }
