@@ -31,17 +31,21 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async signIn({ user, account }) {
-      if (account?.provider === "github") {
-        // Store GitHub token
-        if (account.access_token && user.id) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              githubLogin: (user as Record<string, string>).login || undefined,
-              githubToken: account.access_token,
-            },
-          });
-        }
+      if (account?.provider === "github" && account.access_token) {
+        // Use upsert — the adapter may not have created the user yet
+        const login = (user as Record<string, string>).login;
+        await prisma.user.upsert({
+          where: { id: user.id },
+          update: {
+            githubLogin: login || undefined,
+            githubToken: account.access_token,
+          },
+          create: {
+            id: user.id,
+            githubLogin: login || null,
+            githubToken: account.access_token,
+          },
+        });
       }
       return true;
     },
