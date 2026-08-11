@@ -17,15 +17,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, account, profile }) {
+      // Store the access token in the JWT on first sign-in
+      if (account?.provider === "github" && account.access_token) {
+        token.githubToken = account.access_token;
+        token.githubLogin = (profile as any)?.login;
+      }
+      return token;
+    },
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
-        const account = await prisma.account.findFirst({
-          where: { userId: user.id, provider: "github" },
-        });
-        if (account?.access_token) {
-          (session as Record<string, unknown>).githubToken = account.access_token;
-        }
+        session.user.id = token.sub || "";
+        (session as any).githubToken = token.githubToken;
       }
       return session;
     },
@@ -46,7 +49,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
         } catch {
-          // Don't fail the signin — the account was already created by the adapter
+          // Don't fail the signin
         }
       }
       return true;
@@ -57,8 +60,8 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/error",
   },
   session: {
-    strategy: "database" as const,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
