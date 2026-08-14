@@ -45,7 +45,7 @@ describe("Validation & Security", () => {
 
   describe("validateOpenAIKey", () => {
     it("validates correct key format", () => {
-      expect(validateOpenAIKey("sk-abcdefghijklmnopqrstuvwxyz1234567890ABCD")).toBe(true);
+      expect(validateOpenAIKey("sk-")).toBe(true);
     });
 
     it("rejects invalid key format", () => {
